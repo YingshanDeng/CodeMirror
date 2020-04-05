@@ -16,5 +16,8 @@ export default {
     file: "lib/codemirror.js",
     name: "CodeMirror"
   },
-  plugins: [ buble({namedFunctionExpressions: false}) ]
+  plugins: [ buble({
+    namedFunctionExpressions: false,
+    transforms: { asyncAwait: false }
+  }) ]
 };

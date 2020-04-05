@@ -183,16 +183,16 @@ function leftButtonStartDrag(cm, event, pos, behavior) {
   setTimeout(() => display.input.focus(), 20)
 }
 
-function rangeForUnit(cm, pos, unit) {
+async function rangeForUnit(cm, pos, unit) {
   if (unit == "char") return new Range(pos, pos)
-  if (unit == "word") return cm.findWordAt(pos)
+  if (unit == "word") return await cm.findWordAt(pos)
   if (unit == "line") return new Range(Pos(pos.line, 0), clipPos(cm.doc, Pos(pos.line + 1, 0)))
   let result = unit(cm, pos)
   return new Range(result.from, result.to)
 }
 
 // Normal selection, as opposed to text dragging.
-function leftButtonSelect(cm, event, start, behavior) {
+async function leftButtonSelect(cm, event, start, behavior) {
   let display = cm.display, doc = cm.doc
   e_preventDefault(event)
 
@@ -213,7 +213,7 @@ function leftButtonSelect(cm, event, start, behavior) {
     start = posFromMouse(cm, event, true, true)
     ourIndex = -1
   } else {
-    let range = rangeForUnit(cm, start, behavior.unit)
+    let range = await rangeForUnit(cm, start, behavior.unit)
     if (behavior.extend)
       ourRange = extendRange(ourRange, range.anchor, range.head, behavior.extend)
     else
@@ -237,7 +237,7 @@ function leftButtonSelect(cm, event, start, behavior) {
   }
 
   let lastPos = start
-  function extendTo(pos) {
+  async function extendTo(pos) {
     if (cmp(lastPos, pos) == 0) return
     lastPos = pos
 
@@ -260,7 +260,7 @@ function leftButtonSelect(cm, event, start, behavior) {
       cm.scrollIntoView(pos)
     } else {
       let oldRange = ourRange
-      let range = rangeForUnit(cm, pos, behavior.unit)
+      let range = await rangeForUnit(cm, pos, behavior.unit)
       let anchor = oldRange.anchor, head
       if (cmp(range.anchor, anchor) > 0) {
         head = range.head
@@ -282,13 +282,13 @@ function leftButtonSelect(cm, event, start, behavior) {
   // if the clear happens after their scheduled firing time).
   let counter = 0
 
-  function extend(e) {
+  async function extend(e) {
     let curCount = ++counter
     let cur = posFromMouse(cm, e, true, behavior.unit == "rectangle")
     if (!cur) return
     if (cmp(cur, lastPos) != 0) {
       cm.curOp.focus = activeElt()
-      extendTo(cur)
+      await extendTo(cur)
       let visible = visibleLines(display, doc)
       if (cur.line >= visible.to || cur.line < visible.from)
         setTimeout(operation(cm, () => {if (counter == curCount) extend(e)}), 150)

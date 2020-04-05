@@ -106,12 +106,12 @@ function registerEventHandlers(cm) {
   on(d.scroller, "mousedown", operation(cm, onMouseDown))
   // Older IE's will not fire a second mousedown for a double click
   if (ie && ie_version < 11)
-    on(d.scroller, "dblclick", operation(cm, e => {
+    on(d.scroller, "dblclick", operation(cm, async e => {
       if (signalDOMEvent(cm, e)) return
       let pos = posFromMouse(cm, e)
       if (!pos || clickInGutter(cm, e) || eventInWidget(cm.display, e)) return
       e_preventDefault(e)
-      let word = cm.findWordAt(pos)
+      let word = await cm.findWordAt(pos)
       extendSelection(cm.doc, word.anchor, word.head)
     }))
   else
@@ -159,7 +159,7 @@ function registerEventHandlers(cm) {
   on(d.scroller, "touchmove", () => {
     if (d.activeTouch) d.activeTouch.moved = true
   })
-  on(d.scroller, "touchend", e => {
+  on(d.scroller, "touchend", async e => {
     let touch = d.activeTouch
     if (touch && !eventInWidget(d, e) && touch.left != null &&
         !touch.moved && new Date - touch.start < 300) {
@@ -167,7 +167,7 @@ function registerEventHandlers(cm) {
       if (!touch.prev || farAway(touch, touch.prev)) // Single tap
         range = new Range(pos, pos)
       else if (!touch.prev.prev || farAway(touch, touch.prev.prev)) // Double tap
-        range = cm.findWordAt(pos)
+        range = await cm.findWordAt(pos)
       else // Triple tap
         range = new Range(Pos(pos.line, 0), clipPos(cm.doc, Pos(pos.line + 1, 0)))
       cm.setSelection(range.anchor, range.head)

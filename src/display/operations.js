@@ -181,7 +181,11 @@ export function operation(cm, f) {
     if (cm.curOp) return f.apply(cm, arguments)
     startOperation(cm)
     try { return f.apply(cm, arguments) }
-    finally { endOperation(cm) }
+    finally {
+      setTimeout(() => {
+        endOperation(cm)
+      });
+    }
   }
 }
 // Used to add methods to editor and doc instances, wrapping them in

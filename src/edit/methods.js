@@ -332,20 +332,46 @@ export default function(CodeMirror) {
     }),
 
     // Find the word at the given position (as returned by coordsChar).
-    findWordAt: function(pos) {
+    findWordAt: async function(pos) {
       let doc = this.doc, line = getLine(doc, pos.line).text
       let start = pos.ch, end = pos.ch
+      let cm = doc.cm
       if (line) {
-        let helper = this.getHelper(pos, "wordChars")
-        if ((pos.sticky == "before" || end == line.length) && start) --start; else ++end
-        let startChar = line.charAt(start)
-        let check = isWordChar(startChar, helper)
-          ? ch => isWordChar(ch, helper)
-          : /\s/.test(startChar) ? ch => /\s/.test(ch)
-          : ch => (!/\s/.test(ch) && !isWordChar(ch))
-        while (start > 0 && check(line.charAt(start - 1))) --start
-        while (end < line.length && check(line.charAt(end))) ++end
+        if (cm.getOption("useJieba") && cm.checkJiebaReady()) {
+          let cuts = await cm.cutSentence(line)
+          start = 0;
+          end = 0;
+
+          for(let index = 0; index < cuts.length; index++) {
+            end += cuts[index];
+            if (start <= pos.ch && pos.ch <= end) {
+              if (pos.sticky === "before" && pos.ch === start) {
+                // 判断光标处于分词左边界，且是和前一个字符关联，则跳到上一个分词
+                end = start;
+                start -= cuts[index-1];
+              } else if (pos.sticky === "after" && pos.ch === end) {
+                // 判断光标处于分词右边界，且是和后一个字符关联，则跳到下一个分词
+                start = end;
+                end += cuts[index+1];
+              }
+              break;
+            }
+            start = end;
+          }
+
+        } else {
+          let helper = this.getHelper(pos, "wordChars")
+          if ((pos.sticky == "before" || end == line.length) && start) --start; else ++end
+          let startChar = line.charAt(start)
+          let check = isWordChar(startChar, helper)
+            ? ch => isWordChar(ch, helper)
+            : /\s/.test(startChar) ? ch => /\s/.test(ch)
+            : ch => (!/\s/.test(ch) && !isWordChar(ch))
+          while (start > 0 && check(line.charAt(start - 1))) --start
+          while (end < line.length && check(line.charAt(end))) ++end
+        }
       }
+
       return new Range(Pos(pos.line, start), Pos(pos.line, end))
     },
 

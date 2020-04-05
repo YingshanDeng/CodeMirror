@@ -1,0 +1,23 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>codemirror demo</title>
+  <link rel=stylesheet href="../doc/docs.css">
+
+  <link rel="stylesheet" href="../lib/codemirror.css">
+  <script src="../lib/codemirror.js"></script>
+  <script src="../addon/cut-sentence-to-word/wasm-cppjieba/helper.js"></script>
+  <script src="../addon/cut-sentence-to-word/index.js"></script>
+</head>
+<body>
+  <textarea name="demo" id="demo"></textarea>
+  <script>
+    var editor = CodeMirror.fromTextArea(document.getElementById("demo"), {
+      lineWrapping: true,
+      useJieba: true,
+      // lineNumbers: true,
+      // viewportMargin: Infinity
+    });
+  </script>
+</body>
+</html>
