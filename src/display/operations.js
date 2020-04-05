@@ -177,14 +177,12 @@ export function runInOp(cm, f) {
 }
 // Wraps a function in an operation. Returns the wrapped function.
 export function operation(cm, f) {
-  return function() {
+  return async function() {
     if (cm.curOp) return f.apply(cm, arguments)
     startOperation(cm)
-    try { return f.apply(cm, arguments) }
+    try { return await f.apply(cm, arguments) }
     finally {
-      setTimeout(() => {
-        endOperation(cm)
-      });
+      endOperation(cm)
     }
   }
 }

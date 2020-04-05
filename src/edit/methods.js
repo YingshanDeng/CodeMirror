@@ -331,6 +331,30 @@ export default function(CodeMirror) {
         doc.sel.ranges[i].goalColumn = goals[i]
     }),
 
+    findWordRangeAtPos: async function(text, pos) {
+      let start = 0, end = 0;
+      let cuts = await this.doc.cm.cutSentence(text);
+
+      for(let index = 0; index < cuts.length; index++) {
+        end += cuts[index];
+        if (start <= pos.ch && pos.ch <= end) {
+          if (pos.sticky === "before" && pos.ch === start) {
+            // 判断光标处于分词左边界，且是和前一个字符关联，则跳到上一个分词
+            end = start;
+            start -= cuts[index-1];
+          } else if (pos.sticky === "after" && pos.ch === end) {
+            // 判断光标处于分词右边界，且是和后一个字符关联，则跳到下一个分词
+            start = end;
+            end += cuts[index+1];
+          }
+          break;
+        }
+        start = end;
+      }
+
+      return { start, end }
+    },
+
     // Find the word at the given position (as returned by coordsChar).
     findWordAt: async function(pos) {
       let doc = this.doc, line = getLine(doc, pos.line).text
@@ -338,26 +362,9 @@ export default function(CodeMirror) {
       let cm = doc.cm
       if (line) {
         if (cm.getOption("useJieba") && cm.checkJiebaReady()) {
-          let cuts = await cm.cutSentence(line)
-          start = 0;
-          end = 0;
-
-          for(let index = 0; index < cuts.length; index++) {
-            end += cuts[index];
-            if (start <= pos.ch && pos.ch <= end) {
-              if (pos.sticky === "before" && pos.ch === start) {
-                // 判断光标处于分词左边界，且是和前一个字符关联，则跳到上一个分词
-                end = start;
-                start -= cuts[index-1];
-              } else if (pos.sticky === "after" && pos.ch === end) {
-                // 判断光标处于分词右边界，且是和后一个字符关联，则跳到下一个分词
-                start = end;
-                end += cuts[index+1];
-              }
-              break;
-            }
-            start = end;
-          }
+          let res = await cm.findWordRangeAtPos(line, pos);
+          start = res.start;
+          end = res.end;
 
         } else {
           let helper = this.getHelper(pos, "wordChars")
@@ -525,6 +532,9 @@ function findPosH(doc, pos, dir, unit, visually) {
   } else if (unit == "column") {
     moveOnce(true)
   } else if (unit == "word" || unit == "group") {
+    // todo ...
+    console.log('===', pos, lineObj)
+
     let sawType = null, group = unit == "group"
     let helper = doc.cm && doc.cm.getHelper(pos, "wordChars")
     for (let first = true;; first = false) {

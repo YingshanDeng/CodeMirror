@@ -56,7 +56,7 @@ function clickRepeat(pos, button) {
 // (ctrl-click), rectangle drag (alt-drag), or xwin
 // middle-click-paste. Or it might be a click on something we should
 // not interfere with, such as a scrollbar or widget.
-export function onMouseDown(e) {
+export async function onMouseDown(e) {
   let cm = this, display = cm.display
   if (signalDOMEvent(cm, e) || display.activeTouch && display.input.supportsTouch()) return
   display.input.ensurePolled()
@@ -82,7 +82,7 @@ export function onMouseDown(e) {
   if (pos && handleMappedButton(cm, button, pos, repeat, e)) return
 
   if (button == 1) {
-    if (pos) leftButtonDown(cm, pos, repeat, e)
+    if (pos) await leftButtonDown(cm, pos, repeat, e)
     else if (e_target(e) == display.scroller) e_preventDefault(e)
   } else if (button == 2) {
     if (pos) extendSelection(cm.doc, pos)
@@ -126,7 +126,7 @@ function configureMouse(cm, repeat, event) {
   return value
 }
 
-function leftButtonDown(cm, pos, repeat, event) {
+async function leftButtonDown(cm, pos, repeat, event) {
   if (ie) setTimeout(bind(ensureFocus, cm), 0)
   else cm.curOp.focus = activeElt()
 
@@ -139,7 +139,7 @@ function leftButtonDown(cm, pos, repeat, event) {
       (cmp(contained.to(), pos) > 0 || pos.xRel < 0))
     leftButtonStartDrag(cm, event, pos, behavior)
   else
-    leftButtonSelect(cm, event, pos, behavior)
+    await leftButtonSelect(cm, event, pos, behavior)
 }
 
 // Start a text drag. When it ends, see if any dragging actually

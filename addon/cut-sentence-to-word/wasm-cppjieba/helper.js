@@ -49,7 +49,7 @@ function cutSentencePromise(str) {
     }
     var cutPromise = (resolve, reject) => {
         cutTask = (res) => {
-            resolve(res);
+            resolve(res)
         }
         worker && worker.postMessage({
             cmd: 'cut-sentence',
