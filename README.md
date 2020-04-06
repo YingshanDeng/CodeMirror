@@ -10,7 +10,7 @@ git clone git@github.com:YingshanDeng/CodeMirror.git
 npm i
 npm run build
 
-# 这个需要安装 emscripten 环境，参考：https://webassembly.org/getting-started/developers-guide/
+# 这个需要安装 emscripten 编译器，参考：https://webassembly.org/getting-started/developers-guide/
 emrun --no_browser --port 8081 .
 ```
 
