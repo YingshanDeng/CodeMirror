@@ -24,3 +24,30 @@ emrun --no_browser --port 8081 .
 之后：
 
 ![](https://raw.githubusercontent.com/YingshanDeng/CodeMirror/master/images/after.gif)
+
+## 关键代码
+```JS
+findWordRangeAtPos: async function(text, pos) {
+  let start = 0, end = 0;
+  let cuts = await this.doc.cm.cutSentence(text);
+
+  for(let index = 0; index < cuts.length; index++) {
+    end += cuts[index];
+    if (start <= pos.ch && pos.ch <= end) {
+      if (pos.sticky === "before" && pos.ch === start) {
+        // 判断光标处于分词左边界，且是和前一个字符关联，则跳到上一个分词
+        end = start;
+        start -= cuts[index-1];
+      } else if (pos.sticky === "after" && pos.ch === end) {
+        // 判断光标处于分词右边界，且是和后一个字符关联，则跳到下一个分词
+        start = end;
+        end += cuts[index+1];
+      }
+      break;
+    }
+    start = end;
+  }
+
+  return { start, end }
+},
+```
